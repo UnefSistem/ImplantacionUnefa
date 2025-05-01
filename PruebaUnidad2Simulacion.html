@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Métodos de Simulación Estocásticos y de Montecarlo</title>
+    <style>
+    :root {
+        --primary-color: #2c3e50;
+        --secondary-color: #3498db;
+        --accent-color: #e74c3c;
+        --light-bg: #f8f9fa;
+        --dark-text: #2c3e50;
+        --light-text: #ecf0f1;
+        --border-radius: 8px;
+        --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    body {
+        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        line-height: 1.6;
+        margin: 0;
+        padding: 20px;
+        color: var(--dark-text);
+        background-color: #ecf0f1;
+        font-size: 1.05rem;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: white;
+        padding: 40px;
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 5px;
+        background: linear-gradient(90deg, var(--secondary-color), var(--accent-color));
+    }
+
+    h1, h2, h3 {
+        color: var(--primary-color);
+        margin-top: 1.5em;
+        font-weight: 600;
+        letter-spacing: -0.025em;
+    }
+
+    h1 {
+        font-size: 2.5rem;
+        margin-bottom: 1.5rem;
+        position: relative;
+        padding-bottom: 0.5rem;
+    }
+
+    h1::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 60px;
+        height: 3px;
+        background: var(--secondary-color);
+    }
+
+    h2 {
+        font-size: 1.8rem;
+        border-bottom: 2px solid var(--light-bg);
+        padding-bottom: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    h3 {
+        font-size: 1.4rem;
+        color: var(--secondary-color);
+        margin-bottom: 1rem;
+    }
+
+    .indice {
+        background: var(--light-bg);
+        padding: 2rem;
+        border-radius: var(--border-radius);
+        margin-bottom: 2.5rem;
+        position: relative;
+        transition: transform 0.2s ease;
+    }
+
+    .indice:hover {
+        transform: translateY(-2px);
+    }
+
+    .indice h2 {
+        color: var(--primary-color);
+        font-size: 1.4rem;
+        margin-bottom: 1.2rem;
+    }
+
+    .indice ul {
+        list-style: none;
+        padding-left: 1.2rem;
+    }
+
+    .indice li {
+        margin-bottom: 0.8rem;
+        position: relative;
+    }
+
+    .indice li::before {
+        content: '▹';
+        position: absolute;
+        left: -1.2rem;
+        color: var(--secondary-color);
+    }
+
+    .indice a {
+        color: var(--secondary-color);
+        text-decoration: none;
+        transition: color 0.2s ease;
+    }
+
+    .indice a:hover {
+        color: var(--accent-color);
+        text-decoration: underline;
+    }
+
+    table {
+        width: 100%;
+        margin: 2rem 0;
+        border-collapse: collapse;
+        background: white;
+        box-shadow: var(--box-shadow);
+        border-radius: var(--border-radius);
+        overflow: hidden;
+    }
+
+    th, td {
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 1px solid var(--light-bg);
+    }
+
+    th {
+        background: var(--primary-color);
+        color: white;
+        font-weight: 500;
+    }
+
+    tr:nth-child(even) {
+        background-color: var(--light-bg);
+    }
+
+    .example-container {
+        margin: 2.5rem 0;
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+        overflow: hidden;
+        transition: transform 0.2s ease;
+    }
+
+    .example-container:hover {
+        transform: translateY(-3px);
+    }
+
+    .simulation-box {
+        padding: 1.5rem;
+        background: var(--light-bg);
+        position: relative;
+    }
+
+    canvas {
+        width: 100%;
+        max-width: 600px;
+        height: auto;
+        aspect-ratio: 1/1;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: var(--border-radius);
+        margin: 1rem auto;
+        display: block;
+    }
+
+    button {
+        padding: 0.8rem 1.5rem;
+        background: linear-gradient(135deg, var(--secondary-color), var(--accent-color));
+        color: white;
+        border: none;
+        border-radius: 50px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        box-shadow: var(--box-shadow);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        opacity: 0.9;
+    }
+
+    button:active {
+        transform: translateY(0);
+    }
+
+    .result-box {
+        padding: 1rem;
+        background: white;
+        border-radius: var(--border-radius);
+        margin: 1rem 0;
+        border-left: 4px solid var(--secondary-color);
+    }
+
+    @media (max-width: 768px) {
+        .container {
+            padding: 1.5rem;
+            margin: 10px;
+        }
+        
+        h1 {
+            font-size: 2rem;
+        }
+        
+        h2 {
+            font-size: 1.5rem;
+        }
+        
+        .indice {
+            padding: 1.5rem;
+        }
+    }
+
+    .math-inline {
+        font-family: 'Cambria Math', serif;
+        font-style: italic;
+        color: var(--primary-color);
+    }
+
+    .highlight {
+        background: linear-gradient(120deg, #f6d365 0%, #fda085 100%);
+        padding: 0.2rem 0.4rem;
+        border-radius: 4px;
+    }
+</style>
+</head>
+<body>
+    <div class="container">
+        <h1>Métodos de Simulación Estocásticos y de Montecarlo</h1>
+
+        <div class="indice">
+            <h2>Índice</h2>
+            <ul id="indice-lista">
+                <li><a href="#metodos-estocasticos">I. Métodos Estocásticos</a>
+                    <ul>
+                        <li><a href="#definicion-estocastico">A. Definición y Principios Fundamentales</a></li>
+                        <li><a href="#historia-estocastico">B. Historia y Evolución</a></li>
+                        <li><a href="#creadores-estocastico">C. Creadores y Figuras Clave</a></li>
+                        <li><a href="#ejemplos-estocastico">D. Ejemplos de Métodos Estocásticos</a></li>
+                    </ul>
+                </li>
+                <li><a href="#metodo-montecarlo">II. Método de Montecarlo</a>
+                    <ul>
+                        <li><a href="#definicion-montecarlo">A. Definición y Principios Fundamentales</a></li>
+                        <li><a href="#historia-montecarlo">B. Historia y Evolución</a></li>
+                        <li><a href="#creadores-montecarlo">C. Creadores y Figuras Clave</a></li>
+                        <li><a href="#ejemplos-montecarlo">D. Ejemplos de Aplicaciones del Método de Montecarlo</a></li>
+                    </ul>
+                </li>
+                <li><a href="#relacion-ambos">III. Relación entre Métodos Estocásticos y el Método de Montecarlo</a>
+                    <ul>
+                        <li><a href="#similitudes-ambos">A. Similitudes</a></li>
+                        <li><a href="#diferencias-ambos">B. Diferencias Clave</a></li>
+                        <li><a href="#interconexiones-ambos">C. Interconexiones y Complementariedades</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+
+        <h2 id="metodos-estocasticos">I. Métodos Estocásticos</h2>
+        <h3 id="definicion-estocastico">A. Definición y Principios Fundamentales</h3>
+        <p>Un <b>método estocástico</b> es aquel que incorpora elementos de aleatoriedad o probabilidad en su modelado. A diferencia de los métodos deterministas, donde cada entrada produce una única salida predecible, los métodos estocásticos consideran la incertidumbre y la variabilidad inherentes a muchos sistemas del mundo real. Esto se logra mediante la introducción de variables aleatorias o procesos estocásticos en el modelo.</p>
+        <p>Un <b>proceso estocástico</b> es una secuencia de variables aleatorias indexadas por un parámetro, que generalmente representa el tiempo o el espacio. La evolución de estas variables a lo largo del tiempo o el espacio está gobernada por distribuciones de probabilidad.</p>
+
+        <h3 id="historia-estocastico">B. Historia y Evolución</h3>
+        <ul>
+            <li><b>Principios del Siglo XX:</b> Los trabajos pioneros en probabilidad y estadística sentaron las bases teóricas. Figuras como <b>Andrey Kolmogorov</b> con su axiomatización de la teoría de la probabilidad (1933) fueron cruciales.</li>
+            <li><b>Décadas de 1930-1940:</b> El desarrollo de la teoría de procesos estocásticos avanzó significativamente. El estudio del movimiento browniano por <b>Norbert Wiener</b> y la introducción de las cadenas de Márkov por <b>Andrey Márkov</b> proporcionaron herramientas fundamentales para modelar sistemas con comportamiento aleatorio secuencial.</li>
+            <li><b>Segunda Guerra Mundial y Post-Guerra:</b> La investigación operativa durante la Segunda Guerra Mundial impulsó el desarrollo de técnicas de modelado y simulación, aunque en sus inicios no siempre con un enfoque puramente estocástico.</li>
+            <li><b>Décadas de 1950-1970:</b> El avance de la computación permitió la implementación práctica de modelos estocásticos más complejos. Se desarrollaron métodos para simular procesos estocásticos y analizar sus propiedades. Áreas como la teoría de colas, la fiabilidad de sistemas y la modelización de fenómenos naturales se beneficiaron enormemente.</li>
+            <li><b>Décadas de 1980-Presente:</b> La potencia computacional creciente y el desarrollo de software especializado han democratizado el uso de métodos estocásticos en una amplia gama de disciplinas, desde finanzas y biología hasta ingeniería y ciencias sociales. Se han desarrollado técnicas más sofisticadas para el análisis de datos generados por simulaciones estocásticas y para la inferencia sobre los parámetros de estos modelos.</li>
+        </ul>
+
+        <h3 id="creadores-estocastico">C. Creadores y Figuras Clave</h3>
+        <ul>
+            <li><b>Andrey Kolmogorov (1903-1987):</b> Su axiomatización de la probabilidad proporcionó el marco matemático riguroso para el desarrollo de la teoría de procesos estocásticos.</li>
+            <li><b>Andrey Márkov (1856-1922):</b> Introdujo las cadenas de Márkov, un tipo fundamental de proceso estocástico donde el estado futuro depende solo del estado presente.</li>
+            <li><b>Norbert Wiener (1894-1964):</b> Desarrolló la teoría del movimiento browniano, un proceso estocástico continuo que modela el movimiento aleatorio de partículas.</li>
+            <li><b>Kai Lai Chung (1917-2009):</b> Contribuyó significativamente a la teoría de procesos de Márkov y a la probabilidad en general.</li>
+            <li><b>William Feller (1906-1970):</b> Su obra "An Introduction to Probability Theory and Its Applications" fue fundamental en la difusión y comprensión de los procesos estocásticos.</li>
+        </ul>
+
+        <h3 id="ejemplos-estocastico">D. Ejemplos de Métodos Estocásticos</h3>
+        <ul>
+            <li><b>Cadenas de Márkov:</b> Modelan sistemas que transitan entre diferentes estados con probabilidades definidas (ej: comportamiento de clientes, modelos epidemiológicos).</li>
+            <li><b>Procesos de Poisson:</b> Describen la ocurrencia de eventos aleatorios en el tiempo o el espacio (ej: llegadas a un sistema de colas, defectos en un material).</li>
+            <li><b>Ecuaciones Diferenciales Estocásticas (EDS):</b> Extienden las ecuaciones diferenciales ordinarias para incluir términos aleatorios, modelando sistemas dinámicos sujetos a ruido (ej: modelos financieros, dinámica de poblaciones).</li>
+            <li><b>Modelos de Series de Tiempo Estocásticos:</b> Analizan datos secuenciales donde las observaciones están correlacionadas y tienen un componente aleatorio (ej: pronóstico económico, análisis de señales).</li>
+        </ul>
+        <div class="example-container">
+            <h4>Ejemplo 1: Caminata Aleatoria (Random Walk)</h4>
+            <div class="simulation-box">
+                <canvas id="randomWalkCanvas" width="400" height="400"></canvas>
+                <br>
+                <button onclick="runRandomWalk()">Iniciar Simulación</button>
+                <p id="walkResult">Posición final: (0, 0)</p>
+            </div>
+            <p>Simulación de una caminata aleatoria en 2D donde cada paso es aleatorio (arriba, abajo, izquierda o derecha).</p>
+        </div>
+
+        <h2 id="metodo-montecarlo">II. Método de Montecarlo</h2>
+        <h3 id="definicion-montecarlo">A. Definición y Principios Fundamentales</h3>
+        <p>El <b>método de Montecarlo</b> es una técnica computacional que utiliza muestreo aleatorio repetido para obtener resultados numéricos. Esencialmente, se basa en realizar simulaciones múltiples, cada una con entradas generadas aleatoriamente a partir de distribuciones de probabilidad, para estimar una cantidad de interés. El nombre "Montecarlo" hace referencia al famoso casino de Mónaco, conocido por sus juegos de azar.</p>
+        <p>El principio fundamental del método de Montecarlo es la <b>Ley de los Grandes Números</b>. Esta ley establece que a medida que aumenta el número de ensayos independientes, la media de los resultados se acerca al valor esperado verdadero. En el contexto de la simulación de Montecarlo, al realizar un gran número de simulaciones, la media de las salidas obtenidas proporciona una estimación cada vez más precisa de la cantidad que se desea calcular.</p>
+
+        <h3 id="historia-montecarlo">B. Historia y Evolución</h3>
+        <ul>
+            <li><b>Principios del Siglo XX:</b> Ideas precursoras se pueden encontrar en el uso de muestreo aleatorio para problemas estadísticos.</li>
+            <li><b>Década de 1930:</b> <b>Enrico Fermi</b> utilizó un método probabilístico (aunque no lo llamó Montecarlo) para estudiar la difusión de neutrones.</li>
+            <li><b>Década de 1940 (Proyecto Manhattan):</b> <b>Stanisław Ulam</b> tuvo la idea clave de utilizar el muestreo aleatorio para resolver problemas complejos de hidrodinámica relacionados con el diseño de armas nucleares. Trabajó junto con <b>John von Neumann</b> y <b>Nicholas Metropolis</b> para formalizar y desarrollar el método. Metropolis acuñó el nombre "Montecarlo".</li>
+            <li><b>Post-Guerra:</b> Con la llegada de las computadoras electrónicas, el método de Montecarlo se volvió mucho más práctico y comenzó a aplicarse en diversas áreas de la ciencia, la ingeniería y las finanzas.</li>
+            <li><b>Décadas de 1950-Presente:</b> El avance de la computación ha permitido la implementación de simulaciones de Montecarlo cada vez más complejas y con un mayor número de iteraciones. Se han desarrollado diversas técnicas para mejorar la eficiencia y la precisión de las simulaciones, como el muestreo por importancia, el muestreo estratificado y las secuencias de baja discrepancia (cuasi-Montecarlo).</li>
+        </ul>
+
+        <h3 id="creadores-montecarlo">C. Creadores y Figuras Clave</h3>
+        <ul>
+            <li><b>Stanisław Ulam (1909-1984):</b> Considerado uno de los principales creadores del método de Montecarlo, tuvo la idea inicial de utilizar el muestreo aleatorio para problemas complejos.</li>
+            <li><b>John von Neumann (1903-1957):</b> Jugó un papel crucial en la formalización matemática del método y en su implementación utilizando las primeras computadoras.</li>
+            <li><b>Nicholas Metropolis (1915-1999):</b> Acuñó el nombre "Montecarlo" y contribuyó al desarrollo de algoritmos importantes dentro del método.</li>
+            <li><b>Enrico Fermi (1901-1954):</b> Su trabajo previo en el uso de métodos probabilísticos para problemas de física influyó en el desarrollo del método de Montecarlo.</li>
+        </ul>
+
+        <h3 id="ejemplos-montecarlo">D. Ejemplos de Aplicaciones del Método de Montecarlo</h3>
+        <ul>
+            <li><b>Finanzas:</b> Valoración de opciones complejas, gestión de riesgos, planificación de inversiones.</li>
+            <li><b>Física:</b> Simulación de partículas, mecánica estadística, física nuclear.</li>
+            <li><b>Ingeniería:</b> Análisis de fiabilidad, evaluación de riesgos de proyectos, diseño de sistemas complejos.</li>
+            <li><b>Ciencias Ambientales:</b> Modelado de la dispersión de contaminantes, simulación del cambio climático.</li>
+            <li><b>Medicina:</b> Planificación de tratamientos de radioterapia, modelado de la propagación de enfermedades.</li>
+            <li><b>Estadística:</b> Inferencia bayesiana computacional, cálculo de valores p en pruebas de hipótesis complejas.</li>
+        </ul>
+        <div class="example-container">
+            <h4>Ejemplo 1: Estimación de π</h4>
+            <div class="simulation-box">
+                <canvas id="piCanvas" width="400" height="400"></canvas>
+                <br>
+                <button onclick="runMonteCarlo()">Calcular π</button>
+                <p id="piResult">Valor estimado: 0</p>
+            </div>
+            <p>Estimación de π lanzando puntos aleatorios dentro de un cuadrado y calculando la proporción que cae dentro del círculo inscrito.</p>
+        </div>
+
+        <h2 id="relacion-ambos">III. Relación entre Métodos Estocásticos y el Método de Montecarlo</h2>
+        <h3 id="similitudes-ambos">A. Similitudes</h3>
+        <ul>
+            <li><b>Incorporación de Aleatoriedad:</b> Ambos enfoques se basan en la introducción de elementos aleatorios en el modelado. Los métodos estocásticos modelan inherentemente sistemas con comportamiento aleatorio, mientras que el método de Montecarlo utiliza el muestreo aleatorio como herramienta computacional.</li>
+            <li><b>Tratamiento de la Incertidumbre:</b> Ambos son poderosos para analizar sistemas donde la incertidumbre juega un papel importante. Permiten obtener distribuciones de probabilidad de los resultados en lugar de valores únicos.</li>
+            <li><b>Aplicaciones en Áreas Similares:</b> Ambos métodos se utilizan en una amplia gama de disciplinas para abordar problemas complejos que involucran variabilidad e incertidumbre.</li>
+        </ul>
+
+        <h3 id="diferencias-ambos">B. Diferencias Clave</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Característica</th>
+                    <th>Método Estocástico</th>
+                    <th>Método de Montecarlo</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><b>Naturaleza</b></td>
+                    <td>Un enfoque para <em>modelar</em> sistemas que evolucionan con el tiempo o el espacio de manera probabilística. El modelo en sí mismo es estocástico.</td>
+                    <td>Una <em>técnica computacional</em> que utiliza el muestreo aleatorio repetido para <em>resolver problemas</em>. No necesariamente modela directamente un sistema estocástico, sino que utiliza la aleatoriedad para obtener soluciones numéricas.</td>
+                </tr>
+                <tr>
+                    <td><b>Énfasis</b></td>
+                    <td>Comprender la dinámica probabilística del sistema, analizar sus propiedades estadísticas (ej: esperanza, varianza, autocorrelación).</td>
+                    <td>Estimar valores numéricos (ej: integrales, esperanzas, probabilidades) mediante la simulación de múltiples escenarios aleatorios.</td>
+                </tr>
+                <tr>
+                    <td><b>Salida Principal</b></td>
+                    <td>Un modelo que describe la evolución probabilística del sistema, a menudo expresado en términos de funciones de distribución de probabilidad o ecuaciones estocásticas.</td>
+                    <td>Estimaciones numéricas de una cantidad de interés, junto con medidas de la incertidumbre de la estimación (ej: intervalos de confianza).</td>
+                </tr>
+                <tr>
+                    <td><b>Uso de la Simulación</b></td>
+                    <td>La simulación se utiliza para analizar las trayectorias de los procesos estocásticos y obtener información sobre su comportamiento.</td>
+                    <td>La simulación es la herramienta central para generar las muestras aleatorias necesarias para la estimación.</td>
+                </tr>
+                <tr>
+                    <td><b>Ejemplos</b></td>
+                    <td>Modelado del precio de acciones con movimiento browniano geométrico, simulación de la propagación de una enfermedad con un modelo SIR estocástico, análisis de colas con procesos de Poisson.</td>
+                    <td>Estimación del valor de <span class="math-inline">\\pi</span> lanzando puntos aleatorios en un cuadrado, cálculo de la esperanza de una función compleja mediante muestreo aleatorio, valoración de derivados financieros mediante simulación de precios de activos subyacentes.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3 id="interconexiones-ambos">C. Interconexiones y Complementariedades</h3>
+        <p>El método de Montecarlo es una herramienta poderosa para analizar y obtener resultados de modelos estocásticos complejos que no tienen soluciones analíticas. Por ejemplo:</p>
+        <ul>
+            <li><b>Simulación de Ecuaciones Diferenciales Estocásticas:</b> Las EDS a menudo no tienen soluciones analíticas, por lo que se utilizan métodos numéricos basados en Montecarlo para aproximar sus soluciones.</li>
+            <li><b>Inferencia en Modelos Estocásticos:</b> El método de Montecarlo puede emplearse en técnicas de inferencia bayesiana para estimar los parámetros de modelos estocásticos a partir de datos observados. Los algoritmos de Markov Chain Monte Carlo (MCMC) son un ejemplo clave.</li>
+            <li><b>Evaluación de Riesgos en Modelos Financieros Estocásticos:</b> Los modelos financieros estocásticos se utilizan para modelar la incertidumbre en los mercados. El método de Montecarlo se aplica para simular múltiples escenarios y evaluar el riesgo asociado a diferentes estrategias de inversión.</li>
+        </ul>
+        <p>En resumen, mientras que los métodos estocásticos proporcionan el marco para modelar sistemas con aleatoriedad inherente, el método de Montecarlo ofrece una técnica computacional versátil para analizar estos modelos y resolver problemas complejos que involucran incertidumbre. A menudo, ambos enfoques se utilizan de manera complementaria para obtener una comprensión más profunda de sistemas complejos.</p>
+		<script>
+        // Método Estocástico: Caminata Aleatoria
+        function runRandomWalk() {
+            const canvas = document.getElementById('randomWalkCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            let x = canvas.width / 2;
+            let y = canvas.height / 2;
+            const steps = 500;
+            
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            
+            for(let i = 0; i < steps; i++) {
+                const direction = Math.floor(Math.random() * 4);
+                switch(direction) {
+                    case 0: x++; break; // Derecha
+                    case 1: x--; break; // Izquierda
+                    case 2: y++; break; // Abajo
+                    case 3: y--; break; // Arriba
+                }
+                
+                ctx.lineTo(x, y);
+                ctx.strokeStyle = `hsl(${(i/steps)*360}, 70%, 50%)`;
+                ctx.stroke();
+            }
+            
+            document.getElementById('walkResult').textContent = 
+                `Posición final: (${x - canvas.width/2}, ${canvas.height/2 - y})`;
+        }
+
+        // Método Monte Carlo: Estimación de π
+        function runMonteCarlo() {
+            const canvas = document.getElementById('piCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Dibujar círculo
+            ctx.beginPath();
+            ctx.arc(canvas.width/2, canvas.height/2, canvas.width/2, 0, Math.PI*2);
+            ctx.strokeStyle = '#0056b3';
+            ctx.stroke();
+            
+            let pointsInside = 0;
+            const totalPoints = 1000;
+            
+            for(let i = 0; i < totalPoints; i++) {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                
+                // Calcular distancia al centro
+                const dx = x - canvas.width/2;
+                const dy = y - canvas.height/2;
+                const distance = Math.sqrt(dx*dx + dy*dy);
+                
+                if(distance <= canvas.width/2) {
+                    ctx.fillStyle = 'blue';
+                    pointsInside++;
+                } else {
+                    ctx.fillStyle = 'red';
+                }
+                
+                ctx.fillRect(x, y, 2, 2);
+            }
+            
+            const estimatedPi = 4 * (pointsInside / totalPoints);
+            document.getElementById('piResult').textContent = 
+                `Valor estimado: ${estimatedPi.toFixed(4)} (Error: ${Math.abs(Math.PI - estimatedPi).toFixed(4)})`;
+        }
+    </script>
+</body>
+</html>
